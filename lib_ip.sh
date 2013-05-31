@@ -1,11 +1,15 @@
 #! /bin/bash
 
+source lib_generic.sh
+
 # accept  1 arguement , interface name
 ip_get_if_ipv4()
 {
         
     ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4
 }
+
+
 
 # not done
 # ip_get_if_ipv6()
@@ -25,9 +29,9 @@ ip_show_routing_table()
         echo "Show routing table for interface \"$if_name\""
 
         cmd="ip route show table $if_name"
-        echo -e "launching command \t $cmd "
-        eval $cmd
-
+        # echo -e "launching command \t $cmd "
+        # eval $cmd
+        gen_launch_command $cmd
     done
 
 
