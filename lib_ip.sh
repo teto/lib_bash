@@ -7,6 +7,15 @@ ip_get_if_ipv4()
     ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4
 }
 
+# returns an array with as entries
+# - mask
+# - ip
+ip_get_if_infos()
+{
+	echo "TODO"
+}
+
+
 # not done
 # ip_get_if_ipv6()
 # {
@@ -25,7 +34,7 @@ ip_show_routing_table()
         echo "Show routing table for interface \"$if_name\""
 
         cmd="ip route show table $if_name"
-        echo -e "launching command \t $cmd "
+        echo -e "======= command ======\n $cmd "
         eval $cmd
 
     done

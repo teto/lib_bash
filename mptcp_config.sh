@@ -18,6 +18,8 @@ display_main_list()
 	echo "z: select interface to configure "
 	echo "e: switch multipath capability for interface $(mptcp_get_if_capability)"
 	echo "r: enable multipath for interface (add routing table) "
+	echo "s: set default table"
+	echo "y: flush entries in table"
 	echo "t: display routing tables"
 	echo "q: quit"
 }
@@ -25,42 +27,10 @@ display_main_list()
 
 
 
-# choose_interface()
-# {
-
-# 	echo "Please choose an interface or type q to quit"
-# 	#results=$( ip -o addr list scope global | grep "^[0-9]*:" | tr -d ':' | cut -d' ' -f2 )
-# 	# -o allows to keep output on one line
-# 	results=$( ip -o addr list scope global | cut -d' ' -f2 )
-# #echo "names: $if_names"
-# 	# create an array, add null in order to start valid indexes from "1"
-# 	declare -a if_names=('null' $results );
-# 	echo "test ${if_names[0]}"
-	
-# 	if_no=1
-# 	for if_name in $results; do
-# 		echo "$if_no) $if_name"
-# 		#if_names[$if_no] = $if_name
-# 		if_no=$((if_no+1))
-# 	done;
-# #	echo "if_no at then end $letter"
-
-# 	chosen_if=-1
-
-# 	while [ $chosen_if -ge ${#if_names[@]} ] || [ $chosen_if -le 0 ]; do 
-# 		read chosen_if
-# 		if [ $chosen_if == "q" ]; then
-# 			echo quit
-# 			return 
-# 		fi
-# 	done			
-# 	CURRENT_IF="${if_names[$chosen_if]}"
-# 	echo "changed interface  to $CURRENT_IF"
-
-# }
 
 
-#choose_interface_
+
+
 
 
 cmd="a"
@@ -95,24 +65,39 @@ while [ "$cmd" != "q" ]; do
 				echo "$NUM $CURRENT_IF" >> /etc/iproute2/rt_tables
 			fi
 			
-
+			# local if_ip if_ip_and_mask mask
 			# retrieve IP
-			if_ip_and_mask=$(get_if_ipv4 $CURRENT_IF);
+			if_ip_and_mask=$(ip_get_if_ipv4 $CURRENT_IF);
 			echo "ip & mask $if_ip_and_mask"
+			
+			
+			if_ip=$(echo $if_ip_and_mask | cut -d'/' -f1)
+			mask=$(echo $if_ip_and_mask | cut -d'/' -f2)
 
-			if_ip=$(echo $if_ip_and_mask | cut -d'/' -f2)
-			mask=$(echo if_ip_and_mask | cut -d'/' -f2)
-
+			network_address=$(ip_get_network_address $if_ip $mask)
+			echo "Network address $network_address"
 			echo "adding routing rule: from $if_ip with mask $mask"
-			ip rule add from 10.1.1.2 table $CURRENT_IF
+
+			ip rule add from $if_ip table $CURRENT_IF
 		
 			# compute network address from address	
-			ip route add 10.1.1.0/24 dev $CURRENT_IF scope link table $CURRENT_IF
-			ip route add default via 10.1.1.1 dev $CURRENT_IF table  $CURRENT_IF
+			ip route add $network_address dev $CURRENT_IF scope link table $CURRENT_IF
+			#ip route add default via  dev $CURRENT_IF table  $CURRENT_IF
+;;
+		[sS])
+			# this sets the default route to do only once ?
+			ip route add default via  dev $gateway table  $CURRENT_IF
+			;;
+
+		[yY]) # flush entries
+			# ip_rt_flush
+			ip rule del table $CURRENT_IF
+			ip route flush table $CURRENT_IF
 			;;
 		[tT]) 
 			#echo "Show routing tables"
 			ip_show_routing_table $CURRENT_IF
+			;;
 	esac
 done;
 
