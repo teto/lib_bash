@@ -15,6 +15,24 @@ ip_get_if_ipv4()
 # }
 
 
+# @param a list of interface names "eth0 eth1 etc..."
+ip_show_routing_table()
+{
+    # local if_name=$1;
+
+    for if_name in $@; do
+        
+        echo "Show routing table for interface \"$if_name\""
+
+        cmd="ip route show table $if_name"
+        echo -e "launching command \t $cmd "
+        eval $cmd
+
+    done
+
+
+}
+
 # expect name of the variable to save if name into
 # choose_interface_name test will save if name into test so 
 ip_choose_interface_name()                                                                           

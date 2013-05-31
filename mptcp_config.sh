@@ -110,8 +110,9 @@ while [ "$cmd" != "q" ]; do
 			ip route add 10.1.1.0/24 dev $CURRENT_IF scope link table $CURRENT_IF
 			ip route add default via 10.1.1.1 dev $CURRENT_IF table  $CURRENT_IF
 			;;
-		[tT]) echo "Show routing tables"
-			ip route show table $CURRENT_IF 
+		[tT]) 
+			#echo "Show routing tables"
+			ip_show_routing_table $CURRENT_IF
 	esac
 done;
 
