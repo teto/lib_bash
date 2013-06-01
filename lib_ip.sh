@@ -6,9 +6,87 @@ source lib_generic.sh
 ip_get_if_ipv4()
 {
         
-    ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4
+    ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f1
 }
 
+ip_get_if_mask()
+{
+        
+    ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f2
+}
+
+
+# @param if_name
+
+# no  @param gateway_ip
+ip_add_routing_table()
+{
+    local if_name gateway_ip if_ip if_mask network_address NUM
+    if_name=$1
+    # gateway_ip=$2
+
+
+    # FIRST, make a table-alias
+    if [ `grep $if_name /etc/iproute2/rt_tables | wc -l` -eq 0 ]; then
+        NUM=`cat /etc/iproute2/rt_tables | wc -l`
+        echo "$NUM $if_name" >> /etc/iproute2/rt_tables
+    fi
+    
+    # local if_ip if_ip_and_mask mask
+    # retrieve IP
+    # if_ip_and_mask=$(ip_get_if_ipv4 $if_name);
+    # echo "ip & mask $if_ip_and_mask"
+    
+    if_ip=$(ip_get_if_ipv4 $if_name)
+    mask=$(ip_get_if_mask $if_name)
+    
+    # if_ip=$(echo $if_ip_and_mask | cut -d'/' -f1)
+    # mask=$(echo $if_ip_and_mask | cut -d'/' -f2)
+
+    network_address=$(ip_get_network_address $if_ip $mask)
+    echo "Network address $network_address"
+    echo "adding routing rule: from $if_ip with mask $mask"
+
+
+
+    cmd="ip rule add from $if_ip table $if_name"
+    gen_launch_command "$cmd"
+    # compute network address from address  
+    cmd="ip route add $network_address dev $if_name scope link table $if_name"
+    gen_launch_command "$cmd"
+}
+
+
+# Expects
+# @param gateway_ip
+# @param table_name Routing table name
+ip_add_default_route()
+{
+    local rt_table_name gateway_ip
+    gateway_ip=$1
+    rt_table_name=$2
+
+    cmd="ip route add default via dev $gateway_ip table  $rt_table_name"
+
+    gen_launch_command $cmd
+}
+
+
+ip_delete_and_flush_table()
+{
+    local if_name=$1;
+
+    ip rule del table $if_name
+    ip route flush table $if_name
+}
+
+# returns an array with as entries
+# - mask
+# - ip
+ip_get_if_infos()
+{
+	echo "TODO"
+}
 
 
 # not done
@@ -24,14 +102,16 @@ ip_show_routing_table()
 {
     # local if_name=$1;
 
-    for if_name in $@; do
+    for if_name in "$@"; do
         
         echo "Show routing table for interface \"$if_name\""
 
         cmd="ip route show table $if_name"
+
         # echo -e "launching command \t $cmd "
         # eval $cmd
-        gen_launch_command $cmd
+        gen_launch_command "$cmd"
+
     done
 
 
@@ -87,8 +167,9 @@ ip_choose_interface_name()
 # @param mask mask should be an integer between 1 and 32 (for now)
 ip_get_network_address()
 {
-    local ip=$1 mask=$2 network_address;
-
+    local ip mask network_address;
+    ip=$1
+    mask=$2
     #read ip mask <<< $( echo "$1"|cut -d'/' -f1-2 --output-delimiter=' ')
 
     # if [ $# -ne 2 ]; then
