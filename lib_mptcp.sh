@@ -1,9 +1,23 @@
 #!/bin/bash 
 
+source lib_generic.sh
 
-mptcp_get_state()
+mptcp_get_global_state()
 {
+	# -n for to prevet key name being displayed
 	sysctl -n net.mptcp.mptcp_enabled
+}
+
+mptcp_switch_global_state()
+{
+	local newState=1 
+	
+	if [ $(mptcp_get_global_state) -ne 0 ]; then
+		newState=0
+	fi
+
+	cmd="sysctl -w net.mptcp.mptcp_enabled=$newState"
+	gen_launch_command "$cmd"
 }
 
 

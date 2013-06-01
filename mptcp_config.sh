@@ -14,7 +14,7 @@ display_main_list()
 {
 
 	echo -e "===================\nCurrent interface $CURRENT_IF\n=============="
-	echo "a: switch on/off mptcp (currently $(mptcp_get_state) ) " 
+	echo "a: switch on/off mptcp (currently $(mptcp_get_global_state) ) " 
 	echo "z: select interface to configure "
 	echo "e: switch multipath capability for interface $(mptcp_get_if_capability)"
 	echo "r: enable multipath for interface (add routing table) "
@@ -44,7 +44,8 @@ while [ "$cmd" != "q" ]; do
 	read cmd
 
 	case "$cmd" in
-		[aA]) echo "choice A"
+		[aA]) echo ""
+			mptcp_switch_global_state
 			;;
 
 
@@ -95,6 +96,8 @@ while [ "$cmd" != "q" ]; do
 
 		[fF]) 
 			echo "Launching iperf test"
+			cmd="iperf -c $IPERF_SERVER"
+			gen_launch_command "$cmd"
 			#ip route 
 			#ip_show_routing_table "$CURRENT_IF"
 				
