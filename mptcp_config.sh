@@ -4,7 +4,7 @@
 echo "Launching with kernel $(uname -a)"
 
 CURRENT_IF="eth0"
-
+IPERF_SERVER="multipath-tcp.org"
 
 source ./lib_ip.sh
 source ./lib_mptcp.sh
@@ -19,8 +19,11 @@ display_main_list()
 	echo "e: switch multipath capability for interface $(mptcp_get_if_capability)"
 	echo "r: enable multipath for interface (add routing table) "
 	echo "s: set default table"
-	echo "y: flush entries in table"
-	echo "t: display routing tables"
+	echo "y: flush entries in table $CURRENT_IF"
+	echo "t: display routing table $CURRENT_IF"
+	echo "d: display global routing table"
+	echo "f: launch iperf test with server \" $IPERF_SERVER\""
+
 	echo "q: quit"
 }
 
@@ -48,7 +51,7 @@ while [ "$cmd" != "q" ]; do
 		[zZ]) ip_choose_interface_name CURRENT_IF
 			;;
 
-		[eE]) echo "changing capability"
+		[eE]) echo "changing interface mptcp capability"
 			#if empty	
 			#if [ -z $(get_if_mp_capability) ] 
 			# ip link set dev $CURRENT_IF multipath off
@@ -59,38 +62,19 @@ while [ "$cmd" != "q" ]; do
 		[rR]) echo "update routing table for if $CURRENT_IF" 
 		
 			# mptcp ?
-			ip_add_routing_table "$CURRENT_IF"
-			# FIRST, make a table-alias
-			# if [ `grep $CURRENT_IF /etc/iproute2/rt_tables | wc -l` -eq 0 ]; then
-			# 	NUM=`cat /etc/iproute2/rt_tables | wc -l`
-			# 	echo "$NUM $CURRENT_IF" >> /etc/iproute2/rt_tables
-			# fi
+			ip=$(ip_get_if_ipv4 $CURRENT_IF)
+			echo "enter gateway ip (nothing if you don't know) for if $CURRENT_IF (ip $ip)"
+			read gateway_ip
 			
-			# # local if_ip if_ip_and_mask mask
-			# # retrieve IP
-			# if_ip_and_mask=$(ip_get_if_ipv4 $CURRENT_IF);
-			# echo "ip & mask $if_ip_and_mask"
-			
-			
-			# if_ip=$(echo $if_ip_and_mask | cut -d'/' -f1)
-			# mask=$(echo $if_ip_and_mask | cut -d'/' -f2)
-
-			# network_address=$(ip_get_network_address $if_ip $mask)
-			# echo "Network address $network_address"
-			# echo "adding routing rule: from $if_ip with mask $mask"
-
-			# ip rule add from $if_ip table $CURRENT_IF
+			ip_add_routing_table "$CURRENT_IF" "$gateway_ip"
 		
-			# # compute network address from address	
-			# ip route add $network_address dev $CURRENT_IF scope link table $CURRENT_IF
-			#ip route add default via  dev $CURRENT_IF table  $CURRENT_IF
 ;;
 		[sS])
 			# this sets the default route to do only once ?
 			#ip route add default via dev $gateway table  $CURRENT_IF
-
-			echo "Please enter gateway ip (for default route)"
-			read gateway_ip
+#ip route add default scope global nexthop via 10.1.1.1 dev eth0
+			#echo "Please enter gateway ip (for default route)"
+			#read gateway_ip
 			ip_add_default_route $gateway_ip $CURRENT_IF
 			;;
 
@@ -103,6 +87,18 @@ while [ "$cmd" != "q" ]; do
 			#echo "Show routing tables"
 			ip_show_routing_table "$CURRENT_IF"
 			;;
+		[dD]) 
+			echo "Show global routing table"
+			ip route 
+			#ip_show_routing_table "$CURRENT_IF"
+			;;
+
+		[fF]) 
+			echo "Launching iperf test"
+			#ip route 
+			#ip_show_routing_table "$CURRENT_IF"
+				
+
 	esac
 done;
 

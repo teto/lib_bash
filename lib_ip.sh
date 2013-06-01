@@ -18,12 +18,15 @@ ip_get_if_mask()
 
 # @param if_name
 
-# no  @param gateway_ip
+#  @param gateway_ip optional parameter, if set adds a route
 ip_add_routing_table()
 {
     local if_name gateway_ip if_ip if_mask network_address NUM
     if_name=$1
-    # gateway_ip=$2
+    if [ ! -z $2 ]; then
+     	gateway_ip=$2
+	echo "gateway ip set to $gateway_ip"
+	fi
 
 
     # FIRST, make a table-alias
@@ -35,14 +38,12 @@ ip_add_routing_table()
     # local if_ip if_ip_and_mask mask
     # retrieve IP
     # if_ip_and_mask=$(ip_get_if_ipv4 $if_name);
-    # echo "ip & mask $if_ip_and_mask"
+    
     
     if_ip=$(ip_get_if_ipv4 $if_name)
     mask=$(ip_get_if_mask $if_name)
     
-    # if_ip=$(echo $if_ip_and_mask | cut -d'/' -f1)
-    # mask=$(echo $if_ip_and_mask | cut -d'/' -f2)
-
+ echo "ip & mask $if_ip & $mask"
     network_address=$(ip_get_network_address $if_ip $mask)
     echo "Network address $network_address"
     echo "adding routing rule: from $if_ip with mask $mask"
@@ -54,21 +55,32 @@ ip_add_routing_table()
     # compute network address from address  
     cmd="ip route add $network_address dev $if_name scope link table $if_name"
     gen_launch_command "$cmd"
+
+	if [ ! -z $gateway_ip ]; then
+		cmd="ip route add default via $gateway_ip dev $if_name table $if_name"
+		gen_launch_command "$cmd"
+	fi
 }
 
 
 # Expects
+# @param if_name
+
 # @param gateway_ip
 # @param table_name Routing table name
 ip_add_default_route()
 {
-    local rt_table_name gateway_ip
-    gateway_ip=$1
-    rt_table_name=$2
+#    local rt_table_name gateway_ip
+	local if_ip if_name
+	if_name=$1
+	if_ip=$(ip_get_if_ipv4 $if_name)
 
-    cmd="ip route add default via dev $gateway_ip table  $rt_table_name"
-
-    gen_launch_command $cmd
+    #gateway_ip=$1
+    #rt_table_name=$2
+cmd="ip route add default scope global nexthop via $if_ip dev $if_name"
+    #cmd="ip route add default via dev $gateway_ip table  $rt_table_name"
+                                              
+    gen_launch_command "$cmd"
 }
 
 

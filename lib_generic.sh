@@ -5,14 +5,16 @@
 gen_launch_command()
 {
 	# shoulddisplay command only if a certian variable is exported. Sthg like DEBUG
-	local cmd="$1"
-	echo -e "====== Launching command : $cmd ==="
+	local cmd="$1" 
+	local result="Successful"
+
+	echo -e "====== Launching command  ===\n\t$cmd"
 	# $($cmd)
 	eval "$cmd"
 	if [ $? -ne 0 ]; then
-		echo -e "\tFailure happened"
+		result="Failure happened"
 	fi
 
-	echo -e "==== End ===="
+	echo -e "==== Result: $result  ===="
 
 }
