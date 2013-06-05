@@ -5,17 +5,6 @@
 # Interesting comments here
 # http://mailman.ds9a.nl/pipermail/lar$TC/2003q3/009572.html
 
-RATE=256kbit
-DEV=ppp0
-BURST=16kbit
-#SOURCES="10.168.53.2/32 10.168.73.10/32 10.168.28.20/32"
-#src nuages
-SOURCES="79.141.8.227/32 94.228.180.198/32"
-MTU=1440 
-
-TC="tc"
-
-
 
 source ./lib_tc.sh
 source ./lib_ip.sh
@@ -23,6 +12,20 @@ source ./lib_tc_ingress.sh
 source ./lib_tc_htb.sh
 source ./lib_tc_cbq.sh
 source ./lib_tc_tbf.sh
+source ./lib_ssh.sh
+
+
+
+RATE=256kbit
+DEV=ppp0
+BURST=16kbit
+#src nuages
+# FILTERED_IPS="79.141.8.227/32 94.228.180.198/32"
+FILTERED_IPS="$(ssh_get_client_ip)/32"
+MTU=1440 
+
+TC="tc"
+
 
 
 # === HANDLES ===
@@ -42,7 +45,7 @@ source ./lib_tc_tbf.sh
 
 
 cmd="a"
-while [ $cmd != "q" ]; do
+while [ "$cmd" != "q" ]; do
 
 
 echo -e "\n=====================\nActions for device $DEV ?\n=====================i\n"
@@ -94,6 +97,7 @@ case "$cmd" in
 	2) echo -e "Start CBQ filtering (unreliable a priori) \n"
 		start_cbq_filtering $DEV
 		;;
+
 	3) echo -e "Start TBF filtering \n"
 		start_tbf_filtering $DEV
 		;;

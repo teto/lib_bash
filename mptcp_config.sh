@@ -4,7 +4,7 @@
 echo "Launching with kernel $(uname -a)"
 
 CURRENT_IF="eth0"
-IPERF_SERVER="multipath-tcp.org"
+declare -a IPERF_SERVERS=("multipath-tcp.org" "testdebit.info" $(ssh_get_client_ip))
 
 source ./lib_ip.sh
 source ./lib_mptcp.sh
@@ -13,7 +13,7 @@ source ./lib_mptcp.sh
 display_main_list()
 {
 
-	echo -e "===================\nCurrent interface $CURRENT_IF\n=============="
+	echo -e "===================\nCurrent interface \"$CURRENT_IF\" \n=============="
 	echo "a: switch on/off mptcp (currently $(mptcp_get_global_state) ) " 
 	echo "z: select interface to configure "
 	echo "e: switch multipath capability for interface $(mptcp_get_if_capability)"
@@ -96,7 +96,9 @@ while [ "$cmd" != "q" ]; do
 
 		[fF]) 
 			echo "Launching iperf test"
-			cmd="iperf -c $IPERF_SERVER"
+			gen_choose_value_from_array IPERF_SERVERS[@] iperf_server
+
+			cmd="iperf -c $iperf_server"
 			gen_launch_command "$cmd"
 			#ip route 
 			#ip_show_routing_table "$CURRENT_IF"

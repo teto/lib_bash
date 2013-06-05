@@ -129,51 +129,33 @@ ip_show_routing_table()
 
 }
 
-# expect name of the variable to save if name into
-# choose_interface_name test will save if name into test so 
+# @param name of the variable to save if_name to
 ip_choose_interface_name()                                                                           
 {
 
-        if [ $# -ne 1 ]; then
-                echo "Usage: name of the exported variable, for instance export MY_IF; $0 MY_IF"
-                exit 1                                                                                  
-        fi  
-        echo "Please choose an interface or type q to quit"
-        
-        # -o allows to keep output on one line                                                  
-        #read ip mask <<< $( echo "$1"|cut -d'/' -f1-2 --output-delimiter=' ')
-        results=$( ip -o addr list scope global | cut -d' ' -f2 )
-#echo "names: $if_names"
-        # create an array, add null in order to start valid indexes from "1"
-        declare -a if_names=('null' $results );                                    
-        #echo "test ${if_names[0]}"                                                
-#       echo "if_no at then end $letter"                                           
+    local if_name=$1
 
-        chosen_if=-1                                                               
+    if [ $# -ne 1 ]; then
+            echo "Usage: name of the exported variable, for instance export MY_IF; $0 MY_IF"
+            exit 1                                                                                  
+    fi  
+    echo "Please choose an interface or type q to quit"
+    
 
-        while [ $chosen_if -ge ${#if_names[@]} ] || [ $chosen_if -le 0 ]; do       
-                                                                                   
-		if_no=1
-		for if_name in $results; do
-			echo "$if_no) $if_name"                                                
-			#if_names[$if_no] = $if_name
-			if_no=$((if_no+1))                                                     
-		done;
+    #echo "Saving result into variable named $if_name"
+    # -o allows to keep output on one line                                                  
+    results=$( ip -o addr list scope global | cut -d' ' -f2 )
+    
+    # create an array
+    declare -a if_names=( $results );                                    
 
-                read chosen_if
+    #echo tableau ${if_names[@]}
+    gen_choose_value_from_array if_names[@] $if_name
 
-		# if wanna quit
-                if [ $chosen_if == "q" ]; then
-                        echo quit
-                        return
-                fi
-        done
-        CURRENT_IF="${if_names[$chosen_if]}"
-        #echo "$CURRENT_IF"
-	#set \${!1}="${if_names[$chosen_if]}"
-	read $1 <<< "${if_names[$chosen_if]}"
+    echo $CURRENT_IF
 
 }
+
 
 # @param ip in format A.B.C.D
 # @param mask mask should be an integer between 1 and 32 (for now)
