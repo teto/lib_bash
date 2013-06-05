@@ -7,7 +7,8 @@ TC="tc"
 # @param if_name
 tc_show_stats () {
 	
-	if_name=$1
+	local if_name=$1
+
 	echo "---- qdisc statistics ----------"
 	$TC -s qdisc show dev $if_name
 	echo "---- class statistics ----------"
@@ -18,7 +19,8 @@ tc_show_stats () {
 # @param if_name
 tc_show_config () {
 
-	if_name=$1
+	local if_name=$1
+
 	echo "---- qdisc parameters ----------"
 	$TC qdisc show dev $if_name
 	echo "---- class parameters ----------"
@@ -27,4 +29,13 @@ tc_show_config () {
 	$TC filter show dev $if_name
 	echo "---- filter parameters Ingress ----------"
 	$TC filter show dev $if_name parent ffff:
+}
+
+
+
+# @param if_name
+stop_egress_filtering () {
+
+	local if_name=$1
+  	sudo $TC qdisc del dev $if_name root
 }

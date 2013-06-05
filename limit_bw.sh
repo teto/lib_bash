@@ -6,6 +6,7 @@ if [ $# -eq 1 ]; then
 	DESTINATION=$1
 
 # check variable exists
+# env variable created by ssh
 elif [ ! -z "$SSH_CLIENT" ]; then
 
 	DESTINATION=$( echo "$SSH_CLIENT" | cut -d' ' -f1)
@@ -27,25 +28,9 @@ INTERFACES="eth0 eth1"
 TC="tc"
 
 #set -e
-
-config () {
-	echo "---- qdisc parameters ----------"
-	$TC qdisc show dev $DEV
-	echo "---- class parameters ----------"
-	$TC class show dev $DEV
-	echo "---- filter parameters Egress ----------"
-	$TC filter show dev $DEV
-	echo "---- filter parameters Ingress ----------"
-	$TC filter show dev $DEV parent ffff:
-}
-
-
-stats () {
-  echo "---- qdisc statistics ----------"
-  $TC -s qdisc show dev $DEV
-  echo "---- class statistics ----------"
-  $TC -s class show dev $DEV
-}
+source lib_tc.sh
+source lib_mptcp.sh
+source lib_ip.sh
 
 
 stop_egress_filtering () {
@@ -78,7 +63,6 @@ echo "a: show config"
 echo "z: show statistics"
 echo "e: stop shaping (=> outbound traffic)"
 echo "s: change interface"
-echo "w: switch mptcp state"
 echo "1: start egress filtering (on both interfaces)"
 echo "r: start netperf test"
 echo "d: set extra latency for device (not implemented yet)"
@@ -87,10 +71,10 @@ echo "q: quit"
 read cmd
 case "$cmd" in
         [aA]) echo -e "Showing qdiscs for dev\n"
-                config
+                tc_show_config
                 ;;
         [zZ]) echo -e "Showing stats\n"
-                stats
+                tc_show_stats
                 ;;
 
         [eE]) echo -e "Stop egress filtering\n"
@@ -109,28 +93,18 @@ case "$cmd" in
 		done
 		;;
         [sS]) echo -e "enter interface name"
-                res=4
-                while [ $res -ne 0 ]; do
-                        read tempDEV
+       ip_choose_interface_name DEV
+#		res=4
+                #while [ $res -ne 0 ]; do
+                 #       read tempDEV
                         #$(ip addr list $tempDEV)
-                        ip addr list $tempDEV
-			res=$?
-                done;
-                DEV=$tempDEV
-                echo -e "New device set to $DEV"
+                 #       ip addr list $tempDEV
+		#	res=$?
+                #done;
+                #DEV=$tempDEV
+                #echo -e "New device set to $DEV"
 		;;
-        [wW]) echo -e "Switching mptcp state"
-                res=$(sysctl net.mptcp.mptcp_enabled | cut -d' ' -f3)
-                echo -e "MPTCP current state $res. Switching..."
-                if [ $res -eq 1 ]; then
-                        res=0;
-                else
-                        res=1
-                fi
 
-                        sysctl -w net.mptcp.mptcp_enabled=$res
-
-                ;;
 
 
 
