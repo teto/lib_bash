@@ -4,7 +4,7 @@ source lib_generic.sh
 
 mptcp_get_global_state()
 {
-	# -n for to prevet key name being displayed
+	# -n  to prevent key name being displayed
 	sysctl -n net.mptcp.mptcp_enabled
 }
 
@@ -46,7 +46,7 @@ mptcp_switch_if_capability()
 
 	local new_cap="off";
 	if [ $(mptcp_get_if_capability $if_name) == "off"]; then
-		cap="on"
+		new_cap="on"
 	fi
 
 				#if [ -z $(get_if_mp_capability) ] 

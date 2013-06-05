@@ -14,10 +14,14 @@ source ./lib_tc_cbq.sh
 source ./lib_tc_tbf.sh
 source ./lib_ssh.sh
 
-
+if [ $# -ne 1 ];
+then
+	echo "Use $0 <interfaceName>"
+	exit 1
+fi
 
 RATE=256kbit
-DEV=ppp0
+DEV="$1"
 BURST=16kbit
 #src nuages
 # FILTERED_IPS="79.141.8.227/32 94.228.180.198/32"
@@ -40,7 +44,7 @@ TC="tc"
 
 
 
-
+echo "Filters : $FILTERED_IPS"
 
 
 
@@ -48,11 +52,13 @@ cmd="a"
 while [ "$cmd" != "q" ]; do
 
 
-echo -e "\n=====================\nActions for device $DEV ?\n=====================i\n"
+echo -e "\n=====================\nActions for device \"$DEV\" (ip \"$(ip_get_if_ipv4 $DEV)\") ?\n=====================i\n"
+
+
 echo "a: show config"
 echo "z: show statistics"
 echo "1: start ingress shaping" 
-echo "2: start cbf shaping" 
+echo "2: start cbf shaping (unreliable)" 
 echo "3: start tbf shaping" 
 echo "t: stop policing (= ingress shaping)"
 echo "e: stop shaping (=> outbound traffic)"
@@ -99,7 +105,7 @@ case "$cmd" in
 		;;
 
 	3) echo -e "Start TBF filtering \n"
-		start_tbf_filtering $DEV
+		start_tbf_filtering $DEV "$FILTERED_IPS"
 		;;
 
 	[sS]) ip_choose_interface_name DEV
