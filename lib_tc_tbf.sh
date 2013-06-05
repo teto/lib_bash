@@ -33,10 +33,15 @@ start_tbf_filtering() {
 	#ceil - You can set burst bandwidth allowed when buckets are present.
 	#prio - You can set priority for additional bandwidth. So classes with lower prios are offered the bandwidth first. For example, you can give lower prio for DNS traffic and higher for HTTP downloads.
 	#iptables and $TC: You need to use iptables and tc as follows to control outbound HTTP traffic.
-	# $TC qdisc add dev $DEV root tbf rate 8mbit burst 10kb latency 70ms minburst 1540
 
-	
-	$TC class add dev "$if_name" parent 1:0 classid 1:10 htb rate 32kbps ceil 32kbps prio 0
+	#To attach a TBF with a sustained maximum rate of 1mbit/s, a peakrate of 2.0mbit/s, 
+	#a 10kilobyte buffer, 
+	#with a pre-bucket queue size limit calculated so the TBF causes at most 70ms of latency,
+	# with perfect peakrate behavior, enter:
+# tc qdisc add dev eth0 root tbf rate 1mbit burst 10kb latency 70ms peakrate 2mbit minburst 1540
+
+	$TC qdisc add dev "$if_name" root tbf rate 2mbit burst 10kb latency 30ms minburst 1540
+
 	
 	#  filters are called from within a qdisc, and not the other way around!
 	# The filters attached to that qdisc then return with a decision 
