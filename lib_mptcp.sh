@@ -31,10 +31,10 @@ mptcp_get_if_capability()
 	local res=$(ip addr show $if_name | grep -o NOMULTIPATH)
 	
 	# if res empty 
-	if [ -z $res ]; then
-		echo "off"
-	else
+	if [ -z "$res" ]; then
 		echo "on"
+	else
+		echo "off"
 	fi
 	
 }
@@ -45,12 +45,12 @@ mptcp_switch_if_capability()
 	local if_name=$1
 
 	local new_cap="off";
-	if [ $(mptcp_get_if_capability $if_name) == "off"]; then
+	if [ $(mptcp_get_if_capability $if_name) == "off" ]; then
 		new_cap="on"
 	fi
 
-				#if [ -z $(get_if_mp_capability) ] 
-	ip link set dev $if_name multipath $new_cap
+	cmd="ip link set dev $if_name multipath $new_cap"
+	gen_launch_command "$cmd"
 }
 
 

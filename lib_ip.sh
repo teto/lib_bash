@@ -5,14 +5,22 @@ source lib_generic.sh
 # accept  1 arguement , interface name
 ip_get_if_ipv4()
 {
-        
-    ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f1
+       local if_name="$1" 
+    ip -o -4 addr show "$if_name" scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f1
 }
 
+# @param interface name
+ip_get_if_gateway()
+{
+        local if_name="$1"
+	ip -4 route list 0/0 |grep "$if_name"| cut -d' ' -f3
+}
+
+# @param interface name
 ip_get_if_mask()
 {
-        
-    ip -o -4 addr show $1 scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f2
+    local if_name="$1" 
+    ip -o -4 addr show "$if_name" scope global| tr -s ' '|cut -d' ' -f4|cut -d'/' -f2
 }
 
 

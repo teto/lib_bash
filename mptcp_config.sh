@@ -1,13 +1,16 @@
 #!/bin/bash
 
 
+source ./lib_ip.sh
+source ./lib_mptcp.sh
+source ./lib_ssh.sh
+
+
 echo "Launching with kernel $(uname -a)"
 
 CURRENT_IF="eth0"
 declare -a IPERF_SERVERS=("multipath-tcp.org" "testdebit.info" $(ssh_get_client_ip))
 
-source ./lib_ip.sh
-source ./lib_mptcp.sh
 
 
 display_main_list()
@@ -16,13 +19,13 @@ display_main_list()
 	echo -e "===================\nCurrent interface \"$CURRENT_IF\" \n=============="
 	echo "a: switch on/off mptcp (currently $(mptcp_get_global_state) ) " 
 	echo "z: select interface to configure "
-	echo "e: switch multipath capability for interface $(mptcp_get_if_capability)"
+	echo "e: switch multipath capability for interface ( currently $(mptcp_get_if_capability $CURRENT_IF))"
 	echo "r: enable multipath for interface (add routing table) "
 	echo "s: set default table"
-	echo "y: flush entries in table $CURRENT_IF"
-	echo "t: display routing table $CURRENT_IF"
+	echo "y: flush entries in table '$CURRENT_IF'"
+	echo "t: display routing table '$CURRENT_IF'"
 	echo "d: display global routing table"
-	echo "f: launch iperf test with server \" $IPERF_SERVER\""
+	echo "f: launch iperf test "
 
 	echo "q: quit"
 }
@@ -54,9 +57,7 @@ while [ "$cmd" != "q" ]; do
 
 		[eE]) echo "changing interface mptcp capability"
 			#if empty	
-			#if [ -z $(get_if_mp_capability) ] 
-			# ip link set dev $CURRENT_IF multipath off
-			mptcp_switch_if_capability $CURRENT_IF
+			mptcp_switch_if_capability "$CURRENT_IF"
 			;;
 
 
